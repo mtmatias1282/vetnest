@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -19,7 +19,8 @@ export class CategoriesController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  //findOne(@Param('id', new ParseIntPipe({exceptionFactory: () => new BadRequestException('Id no válido ')})) id: string) { //si queremos hacerlo personalizado
+  findOne(@Param('id', new ParseIntPipe()) id: string) { //si queremos hacerlo con el pipe por defecto
     return this.categoriesService.findOne(+id);
   }
 
