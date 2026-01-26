@@ -21,11 +21,12 @@ export class CategoriesService {
   }
 
   findAll() {
-    return `This action returns all categories`;
+    return this.categoryRepository.find();
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} category`;
+    const category = this.categoryRepository.findOneBy({ id });
+    return category;
   }
 
   update(id: number, updateCategoryDto: UpdateCategoryDto) {
