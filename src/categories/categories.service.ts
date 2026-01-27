@@ -34,7 +34,8 @@ export class CategoriesService {
 
   async update(id: number, updateCategoryDto: UpdateCategoryDto) {
     const category = await this.findOne(id);
-    category.name = updateCategoryDto.name;
+    //category.name = updateCategoryDto.name;
+    Object.assign(category, updateCategoryDto);
     await this.categoryRepository.save(category);
   }
 
