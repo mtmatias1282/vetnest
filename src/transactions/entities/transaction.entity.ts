@@ -1,3 +1,4 @@
+import { IsNotEmpty } from 'class-validator';
 import { Product } from 'src/products/entities/product.entity';
 import {
   Column,
@@ -18,7 +19,11 @@ export class Transaction {
   @Column('timestamp', { default: () => 'CURRENT_TIMESTAMP' }) //setear la fecha actual por defecto
   timestamp: Date;
 
-  @OneToMany(() => TransactionContent, (TransactionContent) => TransactionContent.transaction, { eager: true })
+  @OneToMany(
+    () => TransactionContent,
+    (TransactionContent) => TransactionContent.transaction,
+    { eager: true },
+  )
   transactionContent: TransactionContent[]; //un array de TransactionContent
 }
 
@@ -34,11 +39,15 @@ export class TransactionContent {
   price: number;
 
   // MUCHOS items pueden apuntar al MISMO producto
-  @ManyToOne(() => Product, { eager: true })
+  @ManyToOne(() => Product, { eager: true, cascade: true})
+  @IsNotEmpty({ message: 'El producto no puede estar vacío' })
   product: Product;
 
   // MUCHOS items pertenecen a UNA transacción
-  @ManyToOne(() => Transaction, (transaction) => transaction.transactionContent)
+  @ManyToOne(
+    () => Transaction,
+    (transaction) => transaction.transactionContent,
+    { cascade: true, nullable: false },
+  )
   transaction: Transaction;
 }
-
