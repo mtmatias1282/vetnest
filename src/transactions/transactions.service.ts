@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindManyOptions, Repository } from 'typeorm';
 import { Transaction, TransactionContent } from './entities/transaction.entity';
 import { Product } from 'src/products/entities/product.entity';
 import e from 'express';
@@ -63,7 +63,11 @@ export class TransactionsService {
   }
 
   findAll() {
-    return `This action returns all transactions`;
+    // se define las relaciones que se quieren cargar porque no esta eager en la entidad Transaction
+    const options: FindManyOptions<Transaction> = {
+      relations: {transactionContent: true}
+    }    
+    return this.transactionRepository.find(options);
   }
 
   findOne(id: number) {
