@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Transaction, TransactionContent } from './entities/transaction.entity';
 import { Product } from 'src/products/entities/product.entity';
+import e from 'express';
 
 @Injectable()
 export class TransactionsService {
@@ -20,22 +21,44 @@ export class TransactionsService {
   async create(createTransactionDto: CreateTransactionDto) {
     //return await this.transactionRepository.save(createTransactionDto); esta es la forma simple pero no guarda los contenidos de la transacción
 
-    const transaction = new Transaction();
-    transaction.total = createTransactionDto.total;
-    await this.transactionRepository.save(transaction);
-
-    for (const transactionContent of createTransactionDto.transactionContent) {
-      //bucle para guardar cada contenido de la transacción y agregarle la relación con la transacción y el producto
-      const product = await this.productRepository.findOneBy({id: transactionContent.productId});
+    //esta es una forma más segura de hacerlo usando una transacción de base de datos, no confundir esta transaccion es diferente a la entidad Transaction esta es de bases de datos ACID
+    //manager permite acceder a todas las entidades dentro del proyecto
+    await this.transactionRepository.manager.transaction(async (transactionEntityManager) => {
       
-      if (!product) {
-        let errors: string[] = [];
-        errors.push(`El producto no existe`);
-        throw new NotFoundException(errors);
-      }
-      await this.transactionContentRepository.save({...transactionContent, transaction, product});
-    }
+      //Crear instancia de Transaction y asignar total
+      const transaction = new Transaction();
+      const total = createTransactionDto.transactionContent.reduce((total, item) => total + (item.price * item.quantity), 0)
+      transaction.total = total;
+      
+      //bucle para guardar cada contenido de la transacción y agregarle la relación con la transacción y el producto
+      for (const content of createTransactionDto.transactionContent) {
+        const product = await transactionEntityManager.findOneBy(Product, {id: content.productId});
 
+        const errors: string[] = [];
+
+        if (!product) {
+          errors.push(`El producto con id ${content.productId} no existe`);
+          throw new NotFoundException(errors);
+        }
+        
+        if (content.quantity > product.inventory) { 
+          errors.push(`El articulo ${product.name} no tiene suficiente inventario`);
+          throw new BadRequestException(errors);
+        } 
+        product.inventory -= content.quantity; //restar del inventario la cantidad vendida
+        
+        //Crear instancia de TransactionContent
+        const transactionContent = new TransactionContent()
+        transactionContent.transaction = transaction; //asignar la transacción creada anteriormente, del mismo modo la instancia completa
+        transactionContent.product = product; //se le pasa la instancia del producto completa, porque tenemos las cascadas y eager en la entidad
+        transactionContent.quantity = content.quantity;
+        transactionContent.price = content.price;
+
+        // Guardar los cambios en el inventario del producto
+        await transactionEntityManager.save(transaction); //cambiar objeto por transactionEntityManager quitar transactionRepository
+        await transactionEntityManager.save(transactionContent); //guardar el contenido de la transacción
+      }
+    })
     return 'Venta almacenada con éxito';
   }
 
