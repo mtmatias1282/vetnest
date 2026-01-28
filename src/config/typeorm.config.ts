@@ -9,7 +9,7 @@ export const typeOrmConfig = (configService: ConfigService): TypeOrmModuleOption
     password: configService.get('DATABASE_PASS'),
     database: configService.get('DATABASE_NAME'),
     ssl:true,
-    logging: true,
+    //logging: true,
     entities: [__dirname + '/../**/*.entity.{js,ts}'],
     synchronize: true
 }); //con parentesis para retornar un objeto literal
