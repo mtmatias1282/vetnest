@@ -111,7 +111,20 @@ export class TransactionsService {
     return `This action updates a #${id} transaction`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} transaction`;
+  async remove(id: number) {
+    const transaction = await this.findOne(id);
+
+    for (const content of transaction.transactionContent) {
+
+      const product = await this.productRepository.findOneByOrFail({id: content.product.id})
+      product.inventory += content.quantity; //devolver el inventario al producto
+      await this.productRepository.save(product);
+
+      const transactionContent = await this.transactionContentRepository.findOneByOrFail({ id: content.id });
+      await this.transactionContentRepository.remove(transactionContent);
+    }
+
+    await this.transactionRepository.remove(transaction);
+    return [`Transacción con id ${id} eliminada`];
   }
 }
