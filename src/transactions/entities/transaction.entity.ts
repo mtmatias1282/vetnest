@@ -1,5 +1,5 @@
 import { IsNotEmpty } from 'class-validator';
-import { Product } from 'src/products/entities/product.entity';
+import { Product } from '../../products/entities/product.entity';
 import {
   Column,
   Entity,
