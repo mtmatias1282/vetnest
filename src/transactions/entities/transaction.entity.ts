@@ -16,6 +16,12 @@ export class Transaction {
   @Column('decimal')
   total: number;
 
+  @Column({ type: 'varchar', length: 30, nullable: true })
+  coupon: string;
+
+  @Column({ type: 'decimal', nullable: true })
+  discount: number;
+
   @Column('timestamp', { default: () => 'CURRENT_TIMESTAMP' }) //setear la fecha actual por defecto
   timestamp: Date;
 
@@ -39,7 +45,7 @@ export class TransactionContent {
   price: number;
 
   // MUCHOS items pueden apuntar al MISMO producto
-  @ManyToOne(() => Product, { eager: true, cascade: true})
+  @ManyToOne(() => Product, { eager: true, cascade: true })
   @IsNotEmpty({ message: 'El producto no puede estar vacío' })
   product: Product;
 

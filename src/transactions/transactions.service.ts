@@ -10,6 +10,7 @@ import { Between, FindManyOptions, Repository } from 'typeorm';
 import { Transaction, TransactionContent } from './entities/transaction.entity';
 import { Product } from 'src/products/entities/product.entity';
 import { endOfDay, isValid, parseISO, startOfDay } from 'date-fns';
+import { CouponsService } from 'src/coupons/coupons.service';
 
 @Injectable()
 export class TransactionsService {
@@ -20,6 +21,7 @@ export class TransactionsService {
     private readonly transactionContentRepository: Repository<TransactionContent>,
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+    private readonly couponsService: CouponsService, //agregar el servicio de cupones para consumirlo desde aquí  
   ) {}
 
   async create(createTransactionDto: CreateTransactionDto) {
@@ -32,10 +34,18 @@ export class TransactionsService {
         //Crear instancia de Transaction y asignar total
         const transaction = new Transaction();
         const total = createTransactionDto.transactionContent.reduce(
-          (total, item) => total + item.price * item.quantity,
+          (total, item) => total + (item.price * item.quantity),
           0,
         );
         transaction.total = total;
+
+        if(createTransactionDto.coupon){
+          const coupon = await this.couponsService.applyCoupon(createTransactionDto.coupon);
+          const discount = (coupon.percentage / 100) * total;
+          transaction.discount = discount;
+          transaction.coupon = coupon.name;
+          transaction.total -= discount;
+        }
 
         //bucle para guardar cada contenido de la transacción y agregarle la relación con la transacción y el producto
         for (const content of createTransactionDto.transactionContent) {
