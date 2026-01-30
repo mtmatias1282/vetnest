@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -30,9 +31,12 @@ export class CategoriesController {
 
   @Get(':id')
   //findOne(@Param('id', new ParseIntPipe({exceptionFactory: () => new BadRequestException('Id no válido ')})) id: string) { //si queremos hacerlo personalizado
-  findOne(@Param('id', new IdValidationPipe()) id: string) {
+  findOne(
+    @Param('id', new IdValidationPipe()) id: string,
+    @Query('products') products?: string,
+  ) {
     //si queremos hacerlo con el pipe por defecto
-    return this.categoriesService.findOne(+id);
+    return this.categoriesService.findOne(+id, products);
   }
 
   @Patch(':id')
