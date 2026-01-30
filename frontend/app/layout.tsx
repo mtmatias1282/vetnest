@@ -18,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${OutfitFont.className} bg-amber-300`}>{children}</body>
+      <body className={`${OutfitFont.className} bg-amber-50`}>{children}</body>
     </html>
   );
 }
