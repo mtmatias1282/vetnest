@@ -14,6 +14,8 @@ export const CategorySchema = z.object({
     name: z.string()
 })
 
+export const CategoriesResponseSchema = z.array(CategorySchema); //para cuando solo traemos las categorias sin productos
+
 export const CategoryWithProductsResponseSchema = CategorySchema.extend({
     products: z.array(ProductSchema)
 });
